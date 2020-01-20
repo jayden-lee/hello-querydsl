@@ -107,3 +107,16 @@ public void querydsl() {
     assertThat(findMember.getUsername()).isEqualTo(username);
 }
 ```
+
+## Q-Type 인스턴스 사용 방법
+1. 직접 QClass 인스턴스를 생성해서 사용하기
+    ```java
+    QMember qMember = new QMember("m");
+    ```
+   
+2. QClass에 이미 생성된 기본 인스턴스 사용하기
+    ```java
+    QMember qMember = QMember.member;
+    ```
+   
+   <img width="632" alt="QMember" src="https://user-images.githubusercontent.com/43853352/72715544-00b16800-3bb4-11ea-9a9c-b2d592ba2c38.png">
