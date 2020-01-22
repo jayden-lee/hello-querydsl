@@ -12,17 +12,22 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 
+import static com.jayden.study.querydsl.entity.QMember.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-public class QuerydslBasicTest {
+class QuerydslBasicTest {
 
     @Autowired
     EntityManager em;
 
+    JPAQueryFactory queryFactory;
+
     @BeforeEach
-    public void before() {
+    void before() {
+        queryFactory = new JPAQueryFactory(em);
+
         Team teamA = new Team("Team A");
         Team teamB = new Team("Team B");
         em.persist(teamA);
@@ -39,7 +44,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
-    public void jpql() {
+    void jpql() {
         String qlString = "select m from Member m " +
             "where m.username = :username";
         String username = "member1";
@@ -52,18 +57,29 @@ public class QuerydslBasicTest {
     }
 
     @Test
-    public void querydsl() {
+    void querydsl() {
         String username = "member1";
 
-        JPAQueryFactory queryFactory = new JPAQueryFactory(em);
-        QMember m = new QMember("m");
-
         Member findMember = queryFactory
-            .select(m)
-            .from(m)
-            .where(m.username.eq(username))
+            .selectFrom(member)
+            .where(member.username.eq(username))
             .fetchOne();
 
         assertThat(findMember.getUsername()).isEqualTo(username);
+    }
+
+    @Test
+    void search() {
+        String username = "member1";
+        int age = 10;
+
+        Member findMember = queryFactory
+            .selectFrom(QMember.member)
+            .where(QMember.member.username.eq(username),
+                QMember.member.age.eq(age))
+            .fetchOne();
+
+        assertThat(findMember.getUsername()).isEqualTo(username);
+        assertThat(findMember.getAge()).isEqualTo(age);
     }
 }

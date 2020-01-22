@@ -120,3 +120,53 @@ public void querydsl() {
     ```
    
    <img width="632" alt="QMember" src="https://user-images.githubusercontent.com/43853352/72715544-00b16800-3bb4-11ea-9a9c-b2d592ba2c38.png">
+
+## 검색 조건 쿼리
+Querydsl은 JPQL과 Criteria 쿼리를 모두 대체할 수 있다
+
+```java
+member.username.eq("member1") // username = 'member1'
+member.username.ne("member1") //username != 'member1'
+member.username.eq("member1").not() // username != 'member1'
+
+member.username.isNotNull() // username is not null
+member.age.in(10, 20) // age in (10,20)
+member.age.notIn(10, 20) // age not in (10, 20)
+member.age.between(10,30) //between 10, 30
+
+member.age.goe(30) // age >= 30
+member.age.gt(30) // age > 30
+member.age.loe(30) // age <= 30
+member.age.lt(30) // age < 30
+
+member.username.like("member%") // like 'member%' 검색
+member.username.contains("member") // like '%member%' 검색
+member.username.startsWith("member") //like 'member%' 검색
+```
+
+### And 연산자 사용 방법
+And 연산자를 적용하는 경우에 체인닝하는 방법과 파라미터로 적용하는 방법이 있다.
+
+```java
+List<Member> result = queryFactory
+    .selectFrom(member)
+    .where(member.username.eq("member1")
+            .and(member.age.eq(10)))
+    .fetch();
+```
+
+```java
+List<Member> result = queryFactory
+    .selectFrom(member)
+    .where(member.username.eq("member1"),
+            member.age.eq(10))
+    .fetch();
+```
+
+<code>QueryBase</code> 클래스에는 <code>where</code> 메서드가 오버로딩 되어 있다. 파라미터 1개만 받는 메서드와 여러 개를 받을 수 있는
+메서드가 있기 때문에 조건절에 해당하는 Predicate를 두 가지 방법으로 전달할 수 있다. 
+
+그리고 Predicate 인자를 받는 곳에 null 값을 넘기면 조건절을
+만들 때 무시한다. 이런 특성으로 인해 동적 쿼리를 만들 때 유용하다.
+
+<img width="452" alt="querydsl_where" src="https://user-images.githubusercontent.com/43853352/72876934-084f4900-3d3b-11ea-9946-ad0c02e9ed07.png">
