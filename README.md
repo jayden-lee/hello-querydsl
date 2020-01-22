@@ -250,6 +250,24 @@ List<Member> members = queryFactory
     .fetch();
 ```
 
+## 그룹핑
+그룹핑 기능은 <code>groupBy</code> 메서드를 사용해서 설정할 수 있다. 필터 조건으로 <code>having</code>도 사용 가능하다. 
+반환되는 <code>Tuple</code> 타입은 쿼리 실행 결과값으로 반환되는 서로 다른 타입을 함께 처리할 수 있도록 Querydsl에서 지원하는 타입이다.
+
+```java
+List<Tuple> result = queryFactory
+    .select(team.name, member.age.avg())
+    .from(member)
+    .join(member.team, team)
+    .groupBy(team.name)
+    .fetch();
+
+Tuple teamA = result.get(0);
+
+assertThat(teamA.get(team.name)).isEqualTo("teamA");
+assertThat(teamA.get(member.age.avg())).isEqualTo(15);
+```
+
 ## References
 - [인프런 실전! Querydsl 강좌](https://www.inflearn.com/course/Querydsl-%EC%8B%A4%EC%A0%84/dashboard)
 - [Querydsl Reference Guide](http://www.querydsl.com/static/querydsl/4.1.3/reference/html_single)
