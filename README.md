@@ -170,3 +170,55 @@ List<Member> result = queryFactory
 만들 때 무시한다. 이런 특성으로 인해 동적 쿼리를 만들 때 유용하다.
 
 <img width="452" alt="querydsl_where" src="https://user-images.githubusercontent.com/43853352/72876934-084f4900-3d3b-11ea-9946-ad0c02e9ed07.png">
+
+## 결과 조회
+### 1. fetch()
+리스트를 조회한다. 만약 데이터가 없으면 빈 리스트 반환한다.
+
+```java
+List<Member> members = queryFactory
+    .selectFrom(member)
+    .fetch();
+```
+
+### 2. fetchOne()
+단 건 조회할 때 사용한다. 결과가 없으면 null을 반환하고, 결과 값이 두 개 이상이면 에러가 발생한다.
+
+```java
+Member findMember = queryFactory
+    .selectFrom(member)
+    .where(member.username.eq("member1"),
+            member.age.eq(10))
+    .fetchOne();
+```
+
+### 3. fetchFirst()
+limit 구문을 붙여서 쿼리가 실행되고 단 건 조회할 때 사용한다.
+
+```java
+Member findMember = queryFactory
+    .selectFrom(member)
+    .where(member.username.eq("member1"),
+            member.age.eq(10))
+    .fetchFirst();
+```
+
+<img width="251" alt="querydsl_fetchfirst" src="https://user-images.githubusercontent.com/43853352/72878478-56b21700-3d3e-11ea-942e-200a744208d7.png">
+
+### 4. fetchResults()
+결과값으로 반환되는 <code>QueryResults</code>에는 페이징 정보와 목록을 가지고 있다.
+
+```java
+QueryResults<Member> results = queryFactory
+    .selectFrom(member)
+    .fetchResults();
+```
+
+### 5. fetchCount()
+count 쿼리로 변경되어 실행되어서 결과값으로는 count를 반환한다
+
+```java
+long count = queryFactory
+    .selectFrom(member)
+    .fetchCount();
+```
