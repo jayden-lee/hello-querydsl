@@ -5,6 +5,7 @@ import com.jayden.study.querydsl.entity.QMember;
 import com.jayden.study.querydsl.entity.Team;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
+@DisplayName("Querydsl 예제 테스트 클래스")
 class QuerydslBasicTest {
 
     @Autowired
@@ -46,6 +48,7 @@ class QuerydslBasicTest {
     }
 
     @Test
+    @DisplayName("JPQL 이용한 쿼리 테스트")
     void jpql() {
         String qlString = "select m from Member m " +
             "where m.username = :username";
@@ -59,6 +62,7 @@ class QuerydslBasicTest {
     }
 
     @Test
+    @DisplayName("Querydsl를 이용한 쿼리 테스트")
     void querydsl() {
         String username = "member1";
 
@@ -71,6 +75,7 @@ class QuerydslBasicTest {
     }
 
     @Test
+    @DisplayName("검색 조건 쿼리 테스트")
     void search() {
         String username = "member1";
         int age = 10;
@@ -86,6 +91,7 @@ class QuerydslBasicTest {
     }
 
     @Test
+    @DisplayName("정렬 쿼리 테스트")
     void sort() {
         List<Member> members = queryFactory
             .selectFrom(member)
@@ -94,5 +100,20 @@ class QuerydslBasicTest {
             .fetch();
 
         assertThat(members.size()).isEqualTo(4);
+    }
+
+    @Test
+    @DisplayName("페이징 쿼리 테스트")
+    void paging() {
+        List<Member> members = queryFactory
+            .selectFrom(member)
+            .orderBy(member.age.desc())
+            .offset(0)
+            .limit(4)
+            .fetch();
+
+        assertThat(members.size()).isEqualTo(4);
+        assertThat(members.get(0).getUsername()).isEqualTo("member4");
+
     }
 }

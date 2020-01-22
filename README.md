@@ -237,6 +237,19 @@ List<Member> members = queryFactory
 
 <img width="488" alt="querydsl_desc" src="https://user-images.githubusercontent.com/43853352/72880665-a692dd00-3d42-11ea-8ccf-15f4e3adcc1a.png">
 
+## 페이징
+Querydsl에서는 <code>offset</code>과 <code>limit</code>을 이용하여 페이징 기능을 지원한다. offset은 시작 지점이며 0부터 시작한다.
+limit은 개수 제한을 지정한다.
+
+```java
+List<Member> members = queryFactory
+    .selectFrom(member)
+    .orderBy(member.age.desc())
+    .offset(0)
+    .limit(4)
+    .fetch();
+```
+
 ## References
 - [인프런 실전! Querydsl 강좌](https://www.inflearn.com/course/Querydsl-%EC%8B%A4%EC%A0%84/dashboard)
 - [Querydsl Reference Guide](http://www.querydsl.com/static/querydsl/4.1.3/reference/html_single)
