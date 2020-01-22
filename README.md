@@ -222,3 +222,21 @@ long count = queryFactory
     .selectFrom(member)
     .fetchCount();
 ```
+
+## 정렬
+정렬은 <code>orderBy</code> 메서드를 사용해서 설정할 수 있다. orderBy 메서드 인자에는 여러 인자를 넘길 수 있다.
+원하는 정렬 순서에 맞게 <code>OrderSpecifier</code>를 넣어주면 된다.
+
+```java
+List<Member> members = queryFactory
+    .selectFrom(member)
+    .where(member.age.goe(10))
+    .orderBy(member.age.desc(), member.username.asc().nullsLast())
+    .fetch();
+```
+
+<img width="488" alt="querydsl_desc" src="https://user-images.githubusercontent.com/43853352/72880665-a692dd00-3d42-11ea-8ccf-15f4e3adcc1a.png">
+
+## References
+- [인프런 실전! Querydsl 강좌](https://www.inflearn.com/course/Querydsl-%EC%8B%A4%EC%A0%84/dashboard)
+- [Querydsl Reference Guide](http://www.querydsl.com/static/querydsl/4.1.3/reference/html_single)

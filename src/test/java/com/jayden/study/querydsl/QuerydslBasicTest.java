@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 
+import java.util.List;
+
 import static com.jayden.study.querydsl.entity.QMember.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -81,5 +83,16 @@ class QuerydslBasicTest {
 
         assertThat(findMember.getUsername()).isEqualTo(username);
         assertThat(findMember.getAge()).isEqualTo(age);
+    }
+
+    @Test
+    void sort() {
+        List<Member> members = queryFactory
+            .selectFrom(member)
+            .where(member.age.goe(10))
+            .orderBy(member.age.desc(), member.username.asc().nullsLast())
+            .fetch();
+
+        assertThat(members.size()).isEqualTo(4);
     }
 }
