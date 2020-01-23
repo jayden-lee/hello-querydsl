@@ -427,7 +427,6 @@ Member findMember = queryFactory
     )).fetchOne();
 ```
 
-실제 수행되는 쿼리는 아래와 같다.
 
 ```sql
 select
@@ -448,6 +447,33 @@ where
 
 > JPA JPQL 서브쿼리 한계점으로 from 절의 서브쿼리(인라인 뷰)는 지원하지 않는다. 따라서 Querydsl에서도 인라인 뷰를
 지원하지 않는다. 해결 방법으로는 서브쿼리를 조인으로 변경 또는 Native SQL을 사용해야 한다.
+
+## Case 문
+간단한 Case 문을 사용하는 경우에 <code>when</code>, <code>then</code>, <code>otehrwise</code> 메서드를 체이닝해서 사용할 수 있다. 복잡한
+Case 문을 작성하는 경우에는 <code>CaseBuilder</code>를 사용한다. 
+
+```java
+List<String> result = queryFactory
+    .select(member.age
+        .when(10).then("열살")
+        .when(20).then("스무살")
+        .otherwise("기타"))
+    .from(member)
+    .fetch();
+```
+
+실제 수행되는 쿼리는 아래와 같다.
+
+```sql
+select
+    case 
+        when member0_.age=? then ? 
+        when member0_.age=? then ? 
+        else '기타' 
+    end as col_0_0_ 
+from
+member member0_
+```
 
 ## References
 - [인프런 실전! Querydsl 강좌](https://www.inflearn.com/course/Querydsl-%EC%8B%A4%EC%A0%84/dashboard)

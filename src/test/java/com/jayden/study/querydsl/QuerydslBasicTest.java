@@ -5,6 +5,7 @@ import com.jayden.study.querydsl.entity.QMember;
 import com.jayden.study.querydsl.entity.QTeam;
 import com.jayden.study.querydsl.entity.Team;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -201,5 +202,19 @@ class QuerydslBasicTest {
             )).fetchOne();
 
         assertThat(findMember.getAge()).isEqualTo(40);
+    }
+
+    @Test
+    @DisplayName("Case 문 테스트")
+    void case_clause() {
+        List<String> result = queryFactory
+            .select(member.age
+                .when(10).then("열살")
+                .when(20).then("스무살")
+                .otherwise("기타"))
+            .from(member)
+            .fetch();
+
+        assertThat(result).contains("열살", "스무살", "기타");
     }
 }
