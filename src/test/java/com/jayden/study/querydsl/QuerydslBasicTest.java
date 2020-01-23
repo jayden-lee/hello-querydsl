@@ -5,6 +5,7 @@ import com.jayden.study.querydsl.entity.QMember;
 import com.jayden.study.querydsl.entity.QTeam;
 import com.jayden.study.querydsl.entity.Team;
 import com.querydsl.core.Tuple;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -184,5 +185,21 @@ class QuerydslBasicTest {
 
         boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());
         assertThat(loaded).isTrue();
+    }
+
+    @Test
+    @DisplayName("서브쿼리 테스트")
+    void sub_query() {
+        QMember memberSub = new QMember("memberSub");
+
+        Member findMember = queryFactory
+            .selectFrom(QMember.member)
+            .where(QMember.member.age.eq(
+                JPAExpressions
+                    .select(memberSub.age.max())
+                    .from(memberSub)
+            )).fetchOne();
+
+        assertThat(findMember.getAge()).isEqualTo(40);
     }
 }

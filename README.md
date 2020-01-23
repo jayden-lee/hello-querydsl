@@ -411,6 +411,44 @@ where
     member0_.username=?
 ```
 
+## 서브쿼리
+Querydsl에서 서브쿼리를 사용하려면 <code>JPAExpressios</code> 클래스의 팩토리 메서드를 이용해야 한다.
+
+```java
+// 서브 쿼리에서 사용되는 QMember 인스턴스 생성
+QMember memberSub = new QMember("memberSub");
+
+Member findMember = queryFactory
+    .selectFrom(member)
+    .where(member.age.eq(
+        JPAExpressions
+            .select(memberSub.age.max())
+            .from(memberSub)
+    )).fetchOne();
+```
+
+실제 수행되는 쿼리는 아래와 같다.
+
+```sql
+select
+    member0_.member_id as member_i1_0_,
+    member0_.age as age2_0_,
+    member0_.team_id as team_id4_0_,
+    member0_.username as username3_0_ 
+from
+    member member0_ 
+where
+    member0_.age=(
+        select
+            max(member1_.age) 
+        from
+            member member1_
+    )
+```
+
+> JPA JPQL 서브쿼리 한계점으로 from 절의 서브쿼리(인라인 뷰)는 지원하지 않는다. 따라서 Querydsl에서도 인라인 뷰를
+지원하지 않는다. 해결 방법으로는 서브쿼리를 조인으로 변경 또는 Native SQL을 사용해야 한다.
+
 ## References
 - [인프런 실전! Querydsl 강좌](https://www.inflearn.com/course/Querydsl-%EC%8B%A4%EC%A0%84/dashboard)
 - [Querydsl Reference Guide](http://www.querydsl.com/static/querydsl/4.1.3/reference/html_single)
