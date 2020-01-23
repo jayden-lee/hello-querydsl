@@ -74,6 +74,8 @@ compileQuerydsl {
 - querydsl-apt: Querydsl 관련 코드(ex: QHello) 생성 기능 제공
 - querydsl-jpa: Querydsl JPA 관련 기능 제공
 
+# Querydsl 기본 문법
+
 ## JPQL vs Querydsl
 > 아래는 JPQL과 Querydsl에서 동일한 작업(특정 회원 1명 조회)를 하는 코드이다. 두 개의 큰 차이점으로 쿼리 문법 오류를 JPQL은 
 실행 시점에 발견할 수 있으며, Querydsl은 컴파일 시점에 발견할 수 있다.
@@ -473,6 +475,52 @@ select
     end as col_0_0_ 
 from
 member member0_
+```
+
+## 상수, 문자 합치기
+
+### 상수
+조회 결과로 상수 표현식을 나타내기 위해서는 <code>Expressions</code> 클래스의 <code>constant</code> 메서드를 사용한다. 상수는 실제 쿼리가 실행될 때
+사용되지 않고 결과에 추가되어 나타난다.
+
+```java
+List<Tuple> result = queryFactory
+    .select(member.username, Expressions.constant("Dev"))
+    .from(member)
+    .fetch();
+```
+
+
+```sql
+select
+    member0_.username as col_0_0_ 
+from
+    member member0_
+```
+
+### 문자 합치기
+문자를 합쳐서 하나의 값으로 표현할 때는 <code>concat</code> 메서드를 사용한다. 타입이 문자열이 아닌 경우에는 <code>stringValue</code>
+메서드를 호출해서 타입을 문자열로 변경해서 사용하면 된다. 
+
+```java
+String result = queryFactory
+    .select(member.username.concat("_").concat(member.age.stringValue()))
+    .from(member)
+    .where(member.username.eq("member1"))
+    .fetchOne();
+```
+
+실제 수행되는 쿼리는 아래와 같다.
+
+```sql
+select
+    concat(concat(member0_.username,
+    ?),
+    cast(member0_.age as char)) as col_0_0_ 
+from
+    member member0_ 
+where
+    member0_.username=?
 ```
 
 ## References

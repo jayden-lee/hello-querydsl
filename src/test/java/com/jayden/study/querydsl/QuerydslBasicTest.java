@@ -6,6 +6,7 @@ import com.jayden.study.querydsl.entity.QTeam;
 import com.jayden.study.querydsl.entity.Team;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -216,5 +217,30 @@ class QuerydslBasicTest {
             .fetch();
 
         assertThat(result).contains("열살", "스무살", "기타");
+    }
+
+    @Test
+    @DisplayName("상수 테스트")
+    void constant() {
+        List<Tuple> result = queryFactory
+            .select(member.username, Expressions.constant("Dev"))
+            .from(member)
+            .fetch();
+
+        for (Tuple tuple : result) {
+            System.out.println(tuple);
+        }
+    }
+
+    @Test
+    @DisplayName("문자 합치기 테스트")
+    void string_concat() {
+        String result = queryFactory
+            .select(member.username.concat("_").concat(member.age.stringValue()))
+            .from(member)
+            .where(member.username.eq("member1"))
+            .fetchOne();
+
+        assertThat(result).isEqualTo("member1_10");
     }
 }
