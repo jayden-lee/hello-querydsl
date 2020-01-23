@@ -2,7 +2,9 @@ package com.jayden.study.querydsl;
 
 import com.jayden.study.querydsl.entity.Member;
 import com.jayden.study.querydsl.entity.QMember;
+import com.jayden.study.querydsl.entity.QTeam;
 import com.jayden.study.querydsl.entity.Team;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,10 +14,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnit;
 
 import java.util.List;
 
 import static com.jayden.study.querydsl.entity.QMember.*;
+import static com.jayden.study.querydsl.entity.QTeam.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -81,9 +86,9 @@ class QuerydslBasicTest {
         int age = 10;
 
         Member findMember = queryFactory
-            .selectFrom(QMember.member)
-            .where(QMember.member.username.eq(username),
-                QMember.member.age.eq(age))
+            .selectFrom(member)
+            .where(member.username.eq(username),
+                member.age.eq(age))
             .fetchOne();
 
         assertThat(findMember.getUsername()).isEqualTo(username);
@@ -114,6 +119,70 @@ class QuerydslBasicTest {
 
         assertThat(members.size()).isEqualTo(4);
         assertThat(members.get(0).getUsername()).isEqualTo("member4");
+    }
 
+    @Test
+    @DisplayName("조인 테스트")
+    void join() {
+        List<Member> result = queryFactory
+            .selectFrom(member)
+            .join(member.team, team)
+            .where(team.name.eq("Team A"))
+            .fetch();
+
+        assertThat(result)
+            .extracting("username")
+            .containsExactly("member1", "member2");
+    }
+
+    @Test
+    @DisplayName("조인 On 테스트")
+    void join_on() {
+        List<Tuple> result = queryFactory
+            .select(member, team)
+            .from(member)
+            .leftJoin(member.team, team)
+            .on(team.name.eq("Team A"))
+            .fetch();
+
+        for (Tuple tuple : result) {
+            System.out.println(tuple);
+        }
+
+        assertThat(result.size()).isEqualTo(4);
+    }
+
+    @Test
+    @DisplayName("연관 관계 없는 조인 On 테스트")
+    void no_relation_join_on() {
+        em.persist(new Member("Team A"));
+        em.persist(new Member("Team B"));
+        em.persist(new Member("Team C"));
+
+        List<Tuple> result = queryFactory
+            .select(member, team)
+            .from(member)
+            .leftJoin(team).on(member.username.eq(team.name))
+            .fetch();
+
+        for (Tuple tuple : result) {
+            System.out.println(tuple);
+        }
+    }
+
+    @PersistenceUnit
+    EntityManagerFactory emf;
+
+    @Test
+    @DisplayName("페치 조인 테스트")
+    void fetch_join() {
+        Member findMember = queryFactory
+            .selectFrom(member)
+            .join(member.team, team).fetchJoin()
+            .where(member.username.eq("member1"))
+            .fetchOne();
+
+        boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());
+        assertThat(loaded).isTrue();
     }
 }

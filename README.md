@@ -1,6 +1,11 @@
 # Querydsl Study Repo
 > 인프런 실전 Querydsl 강좌를 학습하고 정리한 내용입니다
 
+## Docker MySQL 설치
+```shell script
+docker run -d --name test_mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=admin007! mysql:5.7 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+```
+
 ## Gradle에서 Querydsl 설정
 build.gradle 파일에 querydsl 설정을 추가한다. 설정을 추가하고 <code>build</code> 또는
 <code>compileQuerydsl</code>을 하면, 빌드 폴더에 Entity 클래스에 매핑되는 QEntity 클래스가 생성된다.
@@ -266,6 +271,144 @@ Tuple teamA = result.get(0);
 
 assertThat(teamA.get(team.name)).isEqualTo("teamA");
 assertThat(teamA.get(member.age.avg())).isEqualTo(15);
+```
+
+## 조인
+Querydsl은 **Inner Join**, **Join**, **Left Join**, **Right Join**을 지원한다. 원하는 조인 메서드를 선택하고 첫 번째 파라미터에는
+조인 대상을 지정하고, 두 번째 파라미터에는 별칭으로 사용할 Q 타입을 지정하면 된다. 그리고 조인할 때, <code>on</code> 구문을 직접 지정할 수도 있다.
+
+### 조인 예제 (Inner Join)
+
+```java
+List<Member> result = queryFactory
+    .selectFrom(member)
+    .join(member.team, team)
+    .where(team.name.eq("Team A"))
+    .fetch();
+```
+
+실제 수행되는 쿼리는 아래와 같다.
+
+```sql
+select
+    member0_.member_id as member_i1_0_,
+    member0_.age as age2_0_,
+    member0_.team_id as team_id4_0_,
+    member0_.username as username3_0_ 
+from
+    member member0_ 
+inner join
+    team team1_ 
+        on member0_.team_id=team1_.team_id 
+where
+    team1_.name=?
+```
+
+### 조인 On절
+1. 조인 대상 필터링
+Team 테이블은 이름이 "Team A"인 행만 필터링 되고 나서 Member 테이블과 Left Join을 한다. Left Join처럼 외부조인의 경우에는
+On을 이용해서 필터링 하는 효과가 있지만, 내부조인의 경우에는 익숙한 Where절에 필터링 조건을 적용하는 것이 낫다.
+
+```java
+List<Tuple> result = queryFactory
+    .select(member, team)
+    .from(member)
+    .leftJoin(member.team, team)
+    .on(team.name.eq("Team A"))
+    .fetch();
+```
+
+실제 수행되는 쿼리는 아래와 같다.
+
+```sql
+select
+    member0_.member_id as member_i1_0_0_,
+    team1_.team_id as team_id1_1_1_,
+    member0_.age as age2_0_0_,
+    member0_.team_id as team_id4_0_0_,
+    member0_.username as username3_0_0_,
+    team1_.name as name2_1_1_ 
+from
+    member member0_ 
+left outer join
+    team team1_ 
+        on member0_.team_id=team1_.team_id 
+        and (
+            team1_.name=?
+        )
+```
+
+2. 연관관계 없는 엔티티 외부조인
+
+```java
+List<Tuple> result = queryFactory
+    .select(member, team)
+    .from(member)
+    .leftJoin(team).on(member.username.eq(team.name))
+    .fetch();
+```
+
+실제 수행되는 쿼리는 아래와 같다.
+
+```sql
+select
+    member0_.member_id as member_i1_0_0_,
+    team1_.team_id as team_id1_1_1_,
+    member0_.age as age2_0_0_,
+    member0_.team_id as team_id4_0_0_,
+    member0_.username as username3_0_0_,
+    team1_.name as name2_1_1_ 
+from
+    member member0_ 
+left outer join
+    team team1_ 
+        on (
+            member0_.username=team1_.name
+        )
+```
+
+### 페치 조인
+SQL 조인을 활용해서 연관된 엔티티를 한번의 SQL로 모두 조회하는 기능이다. Inner Join의 경우에 페치 조인을 사용하면
+데이터가 중복되어 조회된다. 이런 경우에는 <code>distinct()</code>를 사용해서 중복되는 데이터를 제거할 수 있다.
+
+```java
+class Test {
+    
+    @PersistenceUnit
+    EntityManagerFactory emf;
+
+    @Test
+    @DisplayName("페치 조인 테스트")
+    void fetch_join() {
+        Member findMember = queryFactory
+            .selectFrom(member)
+            .join(member.team, team).fetchJoin()
+            .where(member.username.eq("member1"))
+            .fetchOne();
+
+        boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());
+        assertThat(loaded).isTrue();
+    }
+}
+```
+
+실제 수행되는 쿼리는 아래와 같다.
+
+```sql
+select
+    member0_.member_id as member_i1_0_0_,
+    team1_.team_id as team_id1_1_1_,
+    member0_.age as age2_0_0_,
+    member0_.team_id as team_id4_0_0_,
+    member0_.username as username3_0_0_,
+    team1_.name as name2_1_1_ 
+from
+    member member0_ 
+inner join
+    team team1_ 
+        on member0_.team_id=team1_.team_id 
+where
+    member0_.username=?
 ```
 
 ## References
