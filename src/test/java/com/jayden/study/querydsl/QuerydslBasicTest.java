@@ -2,10 +2,8 @@ package com.jayden.study.querydsl;
 
 import com.jayden.study.querydsl.entity.Member;
 import com.jayden.study.querydsl.entity.QMember;
-import com.jayden.study.querydsl.entity.QTeam;
 import com.jayden.study.querydsl.entity.Team;
 import com.querydsl.core.Tuple;
-import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -19,16 +17,15 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
-
 import java.util.List;
 
-import static com.jayden.study.querydsl.entity.QMember.*;
-import static com.jayden.study.querydsl.entity.QTeam.*;
+import static com.jayden.study.querydsl.entity.QMember.member;
+import static com.jayden.study.querydsl.entity.QTeam.team;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-@DisplayName("Querydsl 예제 테스트 클래스")
+@DisplayName("Querydsl 기본 예제 테스트 클래스")
 class QuerydslBasicTest {
 
     @Autowired

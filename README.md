@@ -523,6 +523,107 @@ where
     member0_.username=?
 ```
 
+# Querydsl 중급 문법
+
+## 프로젝션
+Select 구문에 어떤 필드를 가져올지 지정하는 것을 프로젝션이라고 한다. 사용자 이름만 반환하는 경우에는 프로젝션 대상이 사용자 이름 1개이다.
+1개이기 때문에 타입을 명확하게 지정할 수 있다. 하지만, 프로젝션 대상이 여러개인 경우에는 Tuple 또는 DTO로 조회해야 한다.
+
+### 프로젝션 대상 하나
+사용자 이름 목록을 조회하는 예제
+
+```java
+List<String> result = queryFactory
+    .select(member.username)
+    .from(member)
+    .fetch();
+```
+
+### Tuple
+프로젝션이 여러개인 결과 값을 처리할 수 있도록 Querydsl에서는 <code>Tuple</code> 클래스를 제공한다.
+
+```java
+List<Tuple> result = queryFactory
+    .select(member.username, member.age)
+    .from(member)
+    .orderBy(member.age.asc())
+    .fetch();
+```
+
+### DTO로 조회
+DTO 클래스로 결과값을 받는 방법은 프로퍼티, 필드, 생성자 접근 방법이 있다.
+
+1. 프로퍼티 접근 방법
+2. 필드 접근 방법
+3. 생성자 접근 방법
+
+#### 1. 프로퍼티 접근 방법
+Querydsl은 <code>MemberDto</code> 객체를 **기본 생성자**로 생성하고 값을 Setter로 설정한다.
+
+```java
+List<MemberDto> result = queryFactory
+    .select(Projections.bean(MemberDto.class,
+            member.username,
+            member.age))
+    .from(member)
+    .fetch();
+```
+
+#### 2. 필드 접근 방법
+Getter, Setter 없이 바로 필드에 접근해서 값을 설정하는 방법이다.
+ 
+```java
+List<MemberDto> result = queryFactory
+    .select(Projections.fields(MemberDto.class,
+        member.username,
+        member.age))
+    .from(member)
+    .fetch();
+```
+
+#### 3. 생성자 접근 방법
+MemberDto 클래스의 생성자에 값을 설정하는 방법이다.
+
+```java
+List<MemberDto> result = queryFactory
+    .select(Projections.constructor(MemberDto.class,
+        member.username,
+        member.age))
+    .from(member)
+    .fetch();
+```
+
+## @QueryProjection
+프로젝션 결과 값을 DTO로 설정하는 3가지 방법을 살펴봤는데, 또 다른 방법으로 <code>@QueryProjection</code>이 있다. **DTO 생성자 위에
+어노테이션을 붙임으로써 컴파일 결과로 QDto 파일이 생성**된다.
+
+DTO 클래스 생성자에 <code>QueryProjection</code> 어노테이션을 추가하고 compileQuerydsl을 수행해서 QMemberDto 클래스를 얻는다.
+
+```java
+@Data
+@NoArgsConstructor
+public class MemberDto {
+
+    private String username;
+    private int age;
+
+    @QueryProjection
+    public MemberDto(String username, int age) {
+        this.username = username;
+        this.age = age;
+    }
+}
+```
+
+생성된 <code>QMemberDto</code> 클래스의 생성자에 프로젝션을 설정한다.
+
+```java
+List<MemberDto> result = queryFactory
+    .select(new QMemberDto(member.username, member.age))
+    .from(member)
+    .fetch();
+```
+
 ## References
 - [인프런 실전! Querydsl 강좌](https://www.inflearn.com/course/Querydsl-%EC%8B%A4%EC%A0%84/dashboard)
 - [Querydsl Reference Guide](http://www.querydsl.com/static/querydsl/4.1.3/reference/html_single)
