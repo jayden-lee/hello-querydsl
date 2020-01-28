@@ -6,6 +6,7 @@ import com.jayden.study.querydsl.entity.Member;
 import com.jayden.study.querydsl.entity.Team;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -118,5 +119,35 @@ class QuerydslIntermediateTest {
         for (MemberDto memberDto : result) {
             System.out.println(memberDto);
         }
+    }
+
+    @Test
+    @DisplayName("동적 쿼리 Where 테스트")
+    void dynamic_query_where() {
+        String username = "member1";
+        Integer age = null;
+
+        List<Member> result = searchMember(username, age);
+    }
+
+    private List<Member> searchMember(String username, Integer age) {
+        return queryFactory
+            .selectFrom(member)
+            .where(usernameEq(username), ageEq(age))
+            .fetch();
+    }
+
+    private BooleanExpression usernameEq(String username) {
+        if (username == null) {
+            return null;
+        }
+        return member.username.eq(username);
+    }
+
+    private BooleanExpression ageEq(Integer age) {
+        if (age == null) {
+            return null;
+        }
+        return member.age.eq(age);
     }
 }

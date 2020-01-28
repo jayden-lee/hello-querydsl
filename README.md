@@ -624,6 +624,58 @@ List<MemberDto> result = queryFactory
     .fetch();
 ```
 
+## 동적 쿼리
+복잡한 조건에 따른 동적 쿼리를 만들기 위해서는 다음 두 가지 방식을 사용할 수 있다. 
+
+- BooleanBuilder
+- Where
+
+### BooleanBuilder
+전달 받은 이름 개수만큼 <code>BooleanBuilder</code>를 사용해서 **or** 구문을 생성한다. or 뿐만 아니라 **and** 메서드도 지원한다.
+
+```java
+public List<Customer> getCustomer(String... names) {
+    QCustomer customer = QCustomer.customer;
+    JPAQuery<Customer> query = queryFactory.selectFrom(customer);
+    BooleanBuilder builder = new BooleanBuilder();
+    for (String name : names) {
+        builder.or(customer.name.eq(name));
+    }
+    query.where(builder); // customer.name eq name1 OR customer.name eq name2 OR ...
+    return query.fetch();
+}
+```
+
+### Where
+where 메서드는 Predicate를 여러 개 받을 수 있도록 선언되어 있다. **null 값을 전달하면 무시**하므로 검색 조건에 해당하는
+값을 각 파라미터에 맞게 조건절을 생성하고 동적 쿼리를 쉽게 만들 수 있다. usernameEq 메서드의 경우에 username 값이 null 이면 null을 반환한다. 값이
+있는 경우에는 조건절을 생성하고 BooleanExpression(Predicate 인터페이스를 구현한 클래스)를 반환한다.
+
+```java
+private List<Member> searchMember(String username, Integer age) {
+    return queryFactory
+        .selectFrom(member)
+        .where(usernameEq(username), ageEq(age))
+        .fetch();
+}
+
+private BooleanExpression usernameEq(String username) {
+    if (username == null) {
+        return null;
+    }
+
+    return member.username.eq(username);
+}
+
+private BooleanExpression ageEq(Integer age) {
+    if (age == null) {
+        return null;
+    }
+
+    return member.age.eq(age);
+}
+```
+
 ## References
 - [인프런 실전! Querydsl 강좌](https://www.inflearn.com/course/Querydsl-%EC%8B%A4%EC%A0%84/dashboard)
 - [Querydsl Reference Guide](http://www.querydsl.com/static/querydsl/4.1.3/reference/html_single)
