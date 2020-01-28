@@ -7,6 +7,7 @@ import com.jayden.study.querydsl.entity.Team;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -173,5 +174,19 @@ class QuerydslIntermediateTest {
             .execute();
 
         assertThat(count).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("SQL Function 테스트")
+    void sql_function() {
+        List<String> result = queryFactory
+            .select(Expressions.stringTemplate("function('concat', {0}, {1}, {2}, {3})"
+                , "Name: ", member.username, " Age: ", member.age.stringValue()))
+            .from(member)
+            .fetch();
+
+        for (String value : result) {
+            System.out.println(value);
+        }
     }
 }

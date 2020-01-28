@@ -722,6 +722,33 @@ where
     age<?
 ```
 
+## SQL 함수 호출
+현재 사용하고 있는 DB에 맞는 Dialect에 이미 함수로 등록되어 있는 경우에만 사용할 수 있다. 아래 이미지는 MySQLDialect 클래스에 등록된 함수
+일부분이다.
+
+<img width="893" alt="mysql-dialect" src="https://user-images.githubusercontent.com/43853352/73242578-be59dd80-41e8-11ea-9b75-e32de4f1daac.png">
+
+### SQL 함수 예제
+```java
+List<String> result = queryFactory
+    .select(Expressions.stringTemplate("function('concat', {0}, {1}, {2}, {3})"
+        , "Name: ", member.username, " Age: ", member.age.stringValue()))
+    .from(member)
+    .fetch();
+```
+
+실제 수행되는 쿼리는 아래와 같다.
+
+```sql
+select
+    concat(?,
+    member0_.username,
+    ?,
+    cast(member0_.age as char)) as col_0_0_ 
+from
+    member member0_
+```
+
 ## References
 - [인프런 실전! Querydsl 강좌](https://www.inflearn.com/course/Querydsl-%EC%8B%A4%EC%A0%84/dashboard)
 - [Querydsl Reference Guide](http://www.querydsl.com/static/querydsl/4.1.3/reference/html_single)
