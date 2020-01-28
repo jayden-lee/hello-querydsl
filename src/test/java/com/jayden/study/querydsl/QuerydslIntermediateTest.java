@@ -19,6 +19,7 @@ import javax.persistence.EntityManager;
 import java.util.List;
 
 import static com.jayden.study.querydsl.entity.QMember.member;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
@@ -149,5 +150,28 @@ class QuerydslIntermediateTest {
             return null;
         }
         return member.age.eq(age);
+    }
+
+    @Test
+    @DisplayName("벌크 수정 테스트")
+    void bulk_update() {
+        long count = queryFactory.
+            update(member)
+            .set(member.username, "비회원")
+            .where(member.age.lt(29))
+            .execute();
+
+        assertThat(count).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("벌크 삭제 테스트")
+    void bulk_delete() {
+        long count = queryFactory.
+            delete(member)
+            .where(member.age.lt(30))
+            .execute();
+
+        assertThat(count).isEqualTo(2);
     }
 }

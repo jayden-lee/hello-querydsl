@@ -676,6 +676,52 @@ private BooleanExpression ageEq(Integer age) {
 }
 ```
 
+## 수정, 삭제 처리
+하나의 쿼리로 대량의 데이터를 수정, 삭제 (DML) 처리하는 방법에 대해서 알아보자.
+
+### 데이터 수정 쿼리
+데이터 수정 쿼리를 다음과 같이 실행하게 되면, 영속성 컨택스트를 무시하고 바로 DB에 쿼리를 날린다. 그래서
+영속성 컨텍스트와 DB 간에 데이터 불일치가 발생한다. 따라서 영속성 컨텍스트 내용을 초기하해서 DB와 일치시킨다.
+
+```java
+long count = queryFactory.update(member)
+    .set(member.username, "비회원")
+    .where(member.age.lt(29))
+    .execute();
+
+em.flush();
+em.clear();
+```
+
+실제 수행되는 쿼리는 아래와 같다.
+
+```sql
+update
+    member 
+set
+    username=? 
+where
+    age<?
+```
+
+### 데이터 삭제 쿼리
+```java
+long count = queryFactory.
+    delete(member)
+    .where(member.age.lt(30))
+    .execute();
+```
+
+실제 수행되는 쿼리는 아래와 같다.
+
+```sql
+delete 
+from
+    member 
+where
+    age<?
+```
+
 ## References
 - [인프런 실전! Querydsl 강좌](https://www.inflearn.com/course/Querydsl-%EC%8B%A4%EC%A0%84/dashboard)
 - [Querydsl Reference Guide](http://www.querydsl.com/static/querydsl/4.1.3/reference/html_single)
