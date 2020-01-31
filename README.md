@@ -749,6 +749,53 @@ from
     member member0_
 ```
 
+# Spring Data JPA와 Querydsl
+
+## Spring Data JPA Repository 생성
+<code>JpaRepository</code> 인터페이스를 확장해서 Repository를 생성한다. JpaRepository 클래스의 타입으로는 Entity, Key 순서대로
+설정한다. 기본적인 CRUD 관련 메서드가 상위 인터페이스에 구현되어 있으므로 MemberRepository는 따로 구현하지 않더라도 상속 받아서 사용할 수 있다.
+ 
+```java
+public interface MemberRepository extends JpaRepository<Member, Long> {
+    List<Member> findByUsername(String username);
+}
+```
+
+## [사용자 정의 Repository 생성](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.single-repository-behavior)
+사용자 정의 Repository 생성하고 사용하는 방법은 다음 세 가지 과정을 거쳐야한다. 
+
+1. 사용자 정의 인터페이스 작성
+사용자 정의 인터페이스를 생성한다.
+
+```java
+public interface MemberRepositoryCustom {
+
+    List<MemberTeamDto> search(MemberSearchCondition condition);
+}
+```
+
+2. 사용자 정의 인터페이스 구현
+사용자 정의 인터페이스를 구현하는 클래스를 생성하는데 접미사로 <code>Impl</code>를 붙여야 한다.
+
+```java
+public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
+    
+    @Override
+    public List<MemberTeamDto> search(MemberSearchCondition condition) {
+        return null;
+    }
+}
+```
+
+3. 스프링 데이터 JPA 리포지토리에 사용자 정의 인터페이스 상속
+1에서 작성한 사용자 정의 인터페이스를 스프링 데이터 JPA 리포지토리 인터페이스가 상속 받도록 추가한다.
+
+```java
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
+
+}
+```
+
 ## References
 - [인프런 실전! Querydsl 강좌](https://www.inflearn.com/course/Querydsl-%EC%8B%A4%EC%A0%84/dashboard)
 - [Querydsl Reference Guide](http://www.querydsl.com/static/querydsl/4.1.3/reference/html_single)
