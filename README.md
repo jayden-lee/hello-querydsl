@@ -796,6 +796,111 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
 }
 ```
 
+## Spring Data 페이징 활용
+Spring Data의 <code>Page</code>, <code>Pageable</code>을 이용해서 페이징처리하는 방법에 대해 알아보자 
+
+### 간단한 페이징 처리
+searchPageSimple 메서드는 페이징 정보를 담고 있는 <code>Pageable</code> 인자를 전달 받아서 offset(시작지점), limit(결과개수)에 적절한 값을 설정한다. <code>fetchResult</code>를
+호출했기 때문에 목록 내용과 총 개수를 얻기 위해서 2개의 쿼리를 실행한다.
+
+```java
+public Page<MemberTeamDto> searchPageSimple(MemberSearchCondition condition, Pageable pageable) {
+    QueryResults<MemberTeamDto> results = queryFactory
+        .select(new QMemberTeamDto(
+            member.id.as("memberId"),
+            member.username,
+            member.age,
+            team.id.as("teamId"),
+            team.name.as("teamName")))
+        .from(member)
+        .leftJoin(member.team, team)
+        .where(
+            usernameEq(condition.getUsername()),
+            teamNameEq(condition.getTeamName()),
+            ageGoe(condition.getAgeGoe()),
+            ageLoe(condition.getAgeLoe())
+        )
+        .offset(pageable.getOffset())
+        .limit(pageable.getPageSize())
+        .fetchResults();
+
+    List<MemberTeamDto> content = results.getResults();
+    long total = results.getTotal();
+
+    return new PageImpl<>(content, pageable, total);
+}
+```
+
+실제 수행되는 쿼리는 아래와 같다.
+
+```sql
+select
+    count(member0_.member_id) as col_0_0_ 
+from
+    member member0_ 
+left outer join
+    team team1_ 
+        on member0_.team_id=team1_.team_id
+```
+
+```sql
+select
+    member0_.member_id as col_0_0_,
+    member0_.username as col_1_0_,
+    member0_.age as col_2_0_,
+    team1_.team_id as col_3_0_,
+    team1_.name as col_4_0_ 
+from
+    member member0_ 
+left outer join
+    team team1_ 
+        on member0_.team_id=team1_.team_id limit ?
+```
+
+### Count 쿼리 최적화
+Count 쿼리를 생략할 수 있는 경우
+- 첫 번째 페이지이면서 컨텐츠 개수가 페이지 크기보다 작은 경우
+- 마지막 페이지인 경우 (현재 위치 값과 컨텐츠 개수를 합치면 전체 크기를 구할 수 있음)
+
+<code>PageableExecutionUtils</code> 유틸 클래스의 <code>getPage</code> 메서드 사용함으로써 경우에 따라 Count 쿼리를 생략할 수 있다.
+
+```java
+List<MemberTeamDto> content = queryFactory
+    .select(new QMemberTeamDto(
+        member.id.as("memberId"),
+        member.username,
+        member.age,
+        team.id.as("teamId"),
+        team.name.as("teamName")))
+    .from(member)
+    .leftJoin(member.team, team)
+    .where(
+        usernameEq(condition.getUsername()),
+        teamNameEq(condition.getTeamName()),
+        ageGoe(condition.getAgeGoe()),
+        ageLoe(condition.getAgeLoe())
+    )
+    .offset(pageable.getOffset())
+    .limit(pageable.getPageSize())
+    .fetch();
+
+JPAQuery<Member> countQuery = queryFactory
+    .select(member)
+    .from(member)
+    .leftJoin(member.team, team)
+    .where(
+        usernameEq(condition.getUsername()),
+        teamNameEq(condition.getTeamName()),
+        ageGoe(condition.getAgeGoe()),
+        ageLoe(condition.getAgeLoe())
+    );
+
+Page<MemberTeamDto> = PageableExecutionUtils
+        .getPage(content, pageable, () -> countQuery.fetchCount());
+```
+
+<img width="709" alt="스크린샷 2020-02-03 오후 5 41 56" src="https://user-images.githubusercontent.com/43853352/73637893-a1bc1a80-46ac-11ea-9d60-c4703ed1ad51.png">
+
 ## References
 - [인프런 실전! Querydsl 강좌](https://www.inflearn.com/course/Querydsl-%EC%8B%A4%EC%A0%84/dashboard)
 - [Querydsl Reference Guide](http://www.querydsl.com/static/querydsl/4.1.3/reference/html_single)
