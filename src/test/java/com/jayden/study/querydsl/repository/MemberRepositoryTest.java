@@ -3,6 +3,7 @@ package com.jayden.study.querydsl.repository;
 import com.jayden.study.querydsl.dto.MemberSearchCondition;
 import com.jayden.study.querydsl.dto.MemberTeamDto;
 import com.jayden.study.querydsl.entity.Member;
+import com.jayden.study.querydsl.entity.QMember;
 import com.jayden.study.querydsl.entity.Team;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +88,16 @@ class MemberRepositoryTest {
 
         assertThat(result.getSize()).isEqualTo(3);
         assertThat(result.getContent()).extracting("username").containsExactly("member1", "member2", "member3");
+    }
+
+    @Test
+    void querydsl_predicate_executor() {
+        int age = 30;
+        Iterable<Member> result = memberRepository.findAll(QMember.member.age.eq(age));
+
+        for (Member member : result) {
+            System.out.println(member);
+        }
     }
 
 }
